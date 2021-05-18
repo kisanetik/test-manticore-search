@@ -1,0 +1,38 @@
+version: '3'
+services:
+  manticore:
+    container_name: manticore
+    image: manticoresearch/manticore
+    restart: always
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 65535
+        hard: 65535
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - ./docker/manticore/lib/manticore.conf:/etc/manticoresearch/manticore.conf
+      - ./docker/manticore/data:/var/lib/manticore
+      - ./docker/manticore/data:/var/data
+      - ./docker/manticore/pak:/usr/local/share/dict
+    ports:
+      - 9306:9306
+      - 9308:9308
+      - 9312:9312
+    depends_on:
+      maria:
+        condition: service_healthy
+
+  maria:
+    image: mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: mysql
+    ports:
+      - 3306:3306
+    volumes:
+      - ./dump2.sql:/data/dump.sql
+    healthcheck:
+      test: mysqladmin ping -h 127.0.0.1 -u root --password=mysql
+
